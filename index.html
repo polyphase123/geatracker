@@ -253,7 +253,7 @@
             </div>
 
             <div
-                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
                 <div class="bg-blue-50 dark:bg-blue-900/50 p-4 rounded-xl flex flex-col justify-center text-center">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-blue-800 dark:text-blue-200">Total
                         Capacity</div>
@@ -281,8 +281,14 @@
                 </div>
                 <div class="bg-indigo-50 dark:bg-indigo-900/50 p-4 rounded-xl flex flex-col justify-center text-center">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-indigo-800 dark:text-indigo-200">
+                        Local Green Jobs</div>
+                    <div id="est-jobs" class="text-2xl font-black text-indigo-900 dark:text-indigo-100 mt-1">0
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl flex flex-col justify-center text-center">
+                    <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
                         Projects Found</div>
-                    <div id="project-count" class="text-2xl font-black text-indigo-900 dark:text-indigo-100 mt-1">0
+                    <div id="project-count" class="text-2xl font-black text-slate-700 dark:text-gray-100 mt-1">0
                     </div>
                 </div>
             </div>
@@ -558,7 +564,9 @@
             1: { total: 1866.13 }, // Match image results precisely
             2: { total: 3440.756, byYear: { 2024: 1000, 2025: 1200, 2026: 1240.756 } }, // Adjusted breakdown to match image total
             3: { total: 6677.2, byTech: { "GEOTHERMAL": 27.218, "IMPOUNDING HYDROPOWER": 300, "PUMPED-STORAGE HYDROPOWER": 6350 } }, // Match image results
-            4: { total: 10195.5, byYear: { 2026: 3000, 2027: 3500, 2028: 2500, 2029: 1195.5 } } // Match image results
+            4: { total: 10195.5, byYear: { 2026: 3000, 2027: 3500, 2028: 2500, 2029: 1195.5 } }, // Match image results
+            5: { total: 3300 }, // GEA-5 Offshore wind target
+            6: { total: 230 }   // GEA-6 Biomass WTE target
         };
 
         const projects = [
@@ -811,13 +819,7 @@
             { id: 4401, gea: 4, year: 2027, grid: "Luzon", type: "GROUND-MOUNTED SOLAR", facilityName: "Other GEA-4 Ground Solar Awards", developer: "Various Awardees", capacity: 585.798, lat: 13.5, lon: 121.5, price: 4.4832, isCod: false },
             { id: 4402, gea: 4, year: 2027, grid: "Luzon", type: "IRESS", facilityName: "Other GEA-4 IRESS Awards", developer: "Various Awardees", capacity: 371.81, lat: 14.5, lon: 121.0, price: 4.4832, isCod: false },
             { id: 4403, gea: 4, year: 2027, grid: "Visayas", type: "ONSHORE WIND", facilityName: "Other GEA-4 Wind Awards", developer: "Various Awardees", capacity: 280.01, lat: 11.0, lon: 122.5, price: 6.0859, isCod: false },
-            { id: 4404, gea: 4, year: 2027, grid: "Luzon", type: "FLOATING SOLAR", facilityName: "Other GEA-4 Floating Solar Awards", developer: "Various Awardees", capacity: 35.00, lat: 14.2, lon: 121.2, price: 6.5258, isCod: false },
-            // Sample GEA-5 (Offshore Wind)
-            { id: 5001, gea: 5, year: 2030, grid: "Luzon", type: "WIND", facilityName: "Manila Bay Offshore Wind Project", developer: "BlueFloat Energy", capacity: 500.000, lat: 14.5, lon: 120.8, price: 11.0000, isCod: false },
-            { id: 5002, gea: 5, year: 2031, grid: "Visayas", type: "WIND", facilityName: "Guimaras Strait Offshore Wind", developer: "Triconti Windkraft Group", capacity: 600.000, lat: 10.6, lon: 122.7, price: 11.0000, isCod: false },
-            // Sample GEA-6 (WTE)
-            { id: 6001, gea: 6, year: 2028, grid: "Luzon", type: "WASTE-TO-ENERGY", facilityName: "Quezon City WTE Facility", developer: "Metro Pacific Investments", capacity: 35.000, lat: 14.7, lon: 121.05, price: 8.0167, isCod: false },
-            { id: 6002, gea: 6, year: 2029, grid: "Mindanao", type: "BIOMASS", facilityName: "Davao Biomass Energy Plant", developer: "Aboitiz Power", capacity: 15.000, lat: 7.1, lon: 125.6, price: 8.0167, isCod: false }
+            { id: 4404, gea: 4, year: 2027, grid: "Luzon", type: "FLOATING SOLAR", facilityName: "Other GEA-4 Floating Solar Awards", developer: "Various Awardees", capacity: 35.00, lat: 14.2, lon: 121.2, price: 6.5258, isCod: false }
         ];
 
         // --- DOM ELEMENTS ---
@@ -836,6 +838,7 @@
         const co2AvoidedEl = document.getElementById('co2-avoided');
         const avgBidPriceEl = document.getElementById('avg-bid-price');
         const projectCountEl = document.getElementById('project-count');
+        const estJobsEl = document.getElementById('est-jobs');
         const regionalDominanceEl = document.getElementById('regional-dominance-list');
         const noResultsEl = document.getElementById('no-results');
         const tableHeaders = document.querySelectorAll('th[data-sort]');
@@ -1115,6 +1118,18 @@
             }, 0);
             co2AvoidedEl.textContent = `${formatNumber(co2 / 1000, 0)}k MT`;
 
+            // Est. Green Jobs: Capacity * Tech_Factor
+            const jobs = projectList.reduce((sum, p) => {
+                let factor = 3; // Solar (Direct Local Jobs / MW)
+                if (p.type.includes('WIND')) factor = 2.5;
+                else if (p.type.includes('HYDRO')) factor = 4;
+                else if (p.type.includes('GEOTHERMAL')) factor = 5;
+                else if (p.type.includes('BIOMASS') || p.type.includes('WASTE-TO-ENERGY')) factor = 6;
+                else if (p.type.includes('IRESS')) factor = 3.5;
+                return sum + (p.capacity * factor);
+            }, 0);
+            estJobsEl.textContent = formatNumber(jobs, 0);
+
             const pricedProjects = projectList.filter(p => p.price > 0);
             const avgPrice = pricedProjects.length > 0 ? pricedProjects.reduce((sum, p) => sum + p.price, 0) / pricedProjects.length : 0;
             avgBidPriceEl.textContent = avgPrice > 0 ? formatNumber(avgPrice, 2) : '---';
@@ -1251,13 +1266,13 @@
             });
 
             // --- Target vs Awarded Chart ---
-            const awardedByGea = [1, 2, 3, 4].map(round => projects.filter(p => p.gea === round).reduce((sum, p) => sum + p.capacity, 0));
-            const targets = [1, 2, 3, 4].map(round => geaTargets[round].total || 0);
+            const awardedByGea = [1, 2, 3, 4, 5, 6].map(round => projects.filter(p => p.gea === round).reduce((sum, p) => sum + p.capacity, 0));
+            const targets = [1, 2, 3, 4, 5, 6].map(round => geaTargets[round].total || 0);
             if (targetChart) targetChart.destroy();
             targetChart = new Chart(document.getElementById('target-chart').getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['GEA-1', 'GEA-2', 'GEA-3', 'GEA-4'],
+                    labels: ['GEA-1', 'GEA-2', 'GEA-3', 'GEA-4', 'GEA-5', 'GEA-6'],
                     datasets: [
                         { label: 'Awarded (MW)', data: awardedByGea, backgroundColor: '#4ade80' },
                         { label: 'Goal (MW)', data: targets, backgroundColor: '#f87171' }
